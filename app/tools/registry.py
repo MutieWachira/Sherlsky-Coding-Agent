@@ -6,11 +6,12 @@ As the project grows, new tools can be registered here.
 """
 
 from app.tools.files import (
-    read_file,
-    list_directory,
+    ReadFileTool,
+    ListDirectoryTool,
 )
 
 TOOLS={ 
-    "read_file": read_file,
-    "list_directory": list_directory,
+    "read_file": ReadFileTool(),
+    #"scan_project": ScanProjectTool(),
+    "list_directory": ListDirectoryTool(),
 }
