@@ -3,7 +3,6 @@ Knowledge Graph Models.
 """
 
 from dataclasses import dataclass
-from uuid import uuid4
 
 from app.graph.relationships import RelationshipType
 from app.language.models import Symbol
@@ -15,33 +14,44 @@ class GraphNode:
     A node inside the Knowledge Graph.
     """
 
-    id: str
-
     symbol: Symbol
+
+    @property
+    def id(self) -> str:
+        return self.symbol.id
 
 
 @dataclass(slots=True)
 class Relationship:
     """
-    Directed edge.
+    Directed edge between two graph nodes.
     """
 
-    id: str
-
     source: str
-
     target: str
-
     relation: RelationshipType
+
+    @property
+    def id(self) -> str:
+        """
+        Deterministic edge ID.
+
+        Example:
+        examples/sample.py:3:UserService:owns:examples/sample.py:6:login
+        """
+        return (
+            f"{self.source}:"
+            f"{self.relation.value}:"
+            f"{self.target}"
+        )
 
     @staticmethod
     def create(
         source: str,
         target: str,
         relation: RelationshipType,
-    ):
+    ) -> "Relationship":
         return Relationship(
-            id=str(uuid4()),
             source=source,
             target=target,
             relation=relation,

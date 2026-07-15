@@ -19,23 +19,28 @@ class Location:
 
 @dataclass(slots=True)
 class Symbol:
-    """
-    Represents a semantic symbol.
-    """
 
     name: str
+
     kind: SymbolKind
+
     location: Location
 
     parent: str | None = None
+
     module: str | None = None
+
     is_async: bool = False
+
     decorators: list[str] | None = None
 
     @property
     def id(self) -> str:
         """
         Stable identifier.
+
+        Example:
+        examples/sample.py:6:login
         """
         return (
             f"{self.location.file}:"

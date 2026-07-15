@@ -62,25 +62,21 @@ class SymbolExtractor:
         Dispatch a node to the correct extractor.
         """
 
-        node = context.node
-
-        handler = self._handlers.get(node.type)
+        handler = self._handlers.get(context.node.type)
 
         if handler is None:
             return None
 
-        if node.type == "function_definition":
-            return handler(
-                context,
-                file_path,
-            )
-
         return handler(
-            node,
+            context,
             file_path,
         )
 
-    def _location(self, node: Node, file_path):
+    def _location(
+        self,
+        node: Node,
+        file_path,
+    ):
         """
         Create a Location object.
         """
@@ -91,14 +87,20 @@ class SymbolExtractor:
             column=node.start_point[1] + 1,
         )
 
+    # ---------------------------------------------------------
+    # Class Extraction
+    # ---------------------------------------------------------
+
     def _class_symbol(
         self,
-        node: Node,
+        context: ASTContext,
         file_path,
     ):
         """
-        Extract a class.
+        Extract a class definition.
         """
+
+        node = context.node
 
         name_node = node.child_by_field_name("name")
 
@@ -115,13 +117,17 @@ class SymbolExtractor:
             ),
         )
 
+    # ---------------------------------------------------------
+    # Function / Method Extraction
+    # ---------------------------------------------------------
+
     def _function_symbol(
         self,
         context: ASTContext,
         file_path,
     ):
         """
-        Extract a function or method.
+        Extract a function or class method.
         """
 
         node = context.node
@@ -131,28 +137,9 @@ class SymbolExtractor:
         if name_node is None:
             return None
 
-        kind = SymbolKind.FUNCTION
-        owner = None
-
-        #
-        # Walk backwards through ancestors looking
-        # for the nearest enclosing class.
-        #
-        for ancestor in reversed(context.ancestors):
-
-            if ancestor.type != "class_definition":
-                continue
-
-            class_name = ancestor.child_by_field_name("name")
-
-            owner = (
-                class_name.text.decode()
-                if class_name
-                else None
-            )
-
-            kind = SymbolKind.METHOD
-            break
+        kind, owner = self._classify_function(
+            context
+        )
 
         is_async = any(
             child.type == "async"
@@ -171,53 +158,106 @@ class SymbolExtractor:
             ),
         )
 
-    def _import_symbol(self,node: Node,file_path,):
+    def _classify_function(
+        self,
+        context: ASTContext,
+    ):
+        """
+        Determine whether a function is
+        a standalone function or a class method.
+
+        Returns
+        -------
+        tuple[SymbolKind, str | None]
+        """
+
+        for ancestor in reversed(
+            context.ancestors
+        ):
+
+            if ancestor.type != "class_definition":
+                continue
+
+            class_name = ancestor.child_by_field_name(
+                "name"
+            )
+
+            owner = (
+                class_name.text.decode()
+                if class_name is not None
+                else None
+            )
+
+            return (
+                SymbolKind.METHOD,
+                owner,
+            )
+
+        return (
+            SymbolKind.FUNCTION,
+            None,
+        )
+
+    # ---------------------------------------------------------
+    # Import Extraction
+    # ---------------------------------------------------------
+
+    def _import_symbol(
+        self,
+        context: ASTContext,
+        file_path,
+    ):
         """
         Extract a standard Python import statement.
 
-        Currently supports:
+        Supported:
 
             import requests
             import pathlib
 
-        Support for aliases and
-        'from ... import ...' will be added later.
+        Future versions will support:
+
+            import requests as req
+
+            from pathlib import Path
         """
 
-        # Find the imported module
+        node = context.node
+
         module_node = next(
+
             (
                 child
                 for child in node.children
                 if child.type == "dotted_name"
             ),
+
             None,
+
         )
 
         if module_node is None:
             return None
 
-            module_name = module_node.text.decode("utf-8")
+        module_name = module_node.text.decode()
 
-            return ImportSymbol(
+        return ImportSymbol(
 
-                # Symbol name
-                name=module_name,
+            name=module_name,
 
-                kind=SymbolKind.IMPORT,
+            kind=SymbolKind.IMPORT,
 
-                # File containing the import
-                module=Path(file_path).stem,
+            module=Path(file_path).stem,
 
-                location=self._location(
-                    node,
-                    file_path,
-                ),
+            location=self._location(
+                node,
+                file_path,
+            ),
 
-                # Import-specific fields
-                imported_name=None,
+            imported_name=None,
 
-                alias=None,
+            alias=None,
 
-                is_from_import=False,
-            )
+            is_from_import=False,
+
+        )
