@@ -14,6 +14,8 @@ def test_walk_tree():
 
     walker = ASTWalker()
 
+    
+
     nodes = list(
         walker.walk(tree.root_node)
     )

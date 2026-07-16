@@ -29,7 +29,6 @@ class KnowledgeGraph:
             return self.nodes[symbol.id]
 
         node = GraphNode(
-            id=symbol.id,
             symbol=symbol,
         )
 

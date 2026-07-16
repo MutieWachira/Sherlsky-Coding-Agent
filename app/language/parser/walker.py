@@ -2,6 +2,16 @@
 AST Walker.
 
 Traverses a Tree-sitter AST while preserving ancestry.
+
+Provides two traversal APIs:
+
+1. walk()
+   Returns raw Tree-sitter Node objects.
+   This preserves backwards compatibility with older code.
+
+2. walk_context()
+   Returns ASTContext objects containing ancestry information.
+   This is the API used by Forge's semantic analysis engine.
 """
 
 from dataclasses import dataclass
@@ -23,17 +33,41 @@ class ASTContext:
 
 class ASTWalker:
     """
-    Depth-first AST traversal.
+    Depth-first Tree-sitter AST traversal.
     """
 
-    def walk(
+    # ---------------------------------------------------------
+    # Public API (Backwards Compatible)
+    # ---------------------------------------------------------
+
+    def walk(self, node: Node):
+        """
+        Yield raw Tree-sitter nodes.
+
+        This preserves compatibility with older tests and
+        existing code that expects `Node` objects.
+        """
+
+        yield node
+
+        for child in node.children:
+            yield from self.walk(child)
+
+    # ---------------------------------------------------------
+    # New Semantic API
+    # ---------------------------------------------------------
+
+    def walk_context(
         self,
         node: Node,
         parent: Node | None = None,
         ancestors: tuple[Node, ...] = (),
     ):
         """
-        Yield every node together with its traversal context.
+        Yield ASTContext objects.
+
+        This is the traversal used by the semantic analyzer,
+        symbol extractor, and future call graph builder.
         """
 
         yield ASTContext(
@@ -46,7 +80,7 @@ class ASTWalker:
         new_ancestors = ancestors + (node,)
 
         for child in node.children:
-            yield from self.walk(
+            yield from self.walk_context(
                 child,
                 node,
                 new_ancestors,

@@ -41,7 +41,9 @@ class SymbolExtractor:
 
         symbols = []
 
-        for context in self.walker.walk(tree.root_node):
+        walker = ASTWalker()
+
+        for context in walker.walk_context(tree.root_node):
 
             symbol = self._extract_node(
                 context,
