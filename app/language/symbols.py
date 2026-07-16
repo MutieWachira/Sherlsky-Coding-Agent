@@ -4,10 +4,9 @@ Python Symbol Extractor.
 Converts a Tree-sitter AST into semantic Symbol objects.
 """
 
-from pathlib import Path
-
 from tree_sitter import Node
 
+from app.document.document import Document
 from app.language.models import (
     Symbol,
     SymbolKind,
@@ -22,7 +21,7 @@ from app.language.parser.walker import (
 
 class SymbolExtractor:
     """
-    Extract semantic symbols from a Tree-sitter AST.
+    Extract semantic symbols from a Document.
     """
 
     def __init__(self):
@@ -34,20 +33,27 @@ class SymbolExtractor:
             "import_statement": self._import_symbol,
         }
 
-    def extract(self, tree, file_path):
+    # ---------------------------------------------------------
+    # Public API
+    # ---------------------------------------------------------
+
+    def extract(
+        self,
+        document: Document,
+    ) -> list[Symbol]:
         """
-        Extract every supported symbol.
+        Extract every supported symbol from a Document.
         """
 
-        symbols = []
+        symbols: list[Symbol] = []
 
-        walker = ASTWalker()
-
-        for context in walker.walk_context(tree.root_node):
+        for context in self.walker.walk_context(
+            document.tree.root_node
+        ):
 
             symbol = self._extract_node(
-                context,
-                file_path,
+                context=context,
+                document=document,
             )
 
             if symbol is not None:
@@ -55,36 +61,40 @@ class SymbolExtractor:
 
         return symbols
 
+    # ---------------------------------------------------------
+    # Dispatcher
+    # ---------------------------------------------------------
+
     def _extract_node(
         self,
         context: ASTContext,
-        file_path,
+        document: Document,
     ):
-        """
-        Dispatch a node to the correct extractor.
-        """
 
-        handler = self._handlers.get(context.node.type)
+        handler = self._handlers.get(
+            context.node.type
+        )
 
         if handler is None:
             return None
 
         return handler(
-            context,
-            file_path,
+            context=context,
+            document=document,
         )
+
+    # ---------------------------------------------------------
+    # Helpers
+    # ---------------------------------------------------------
 
     def _location(
         self,
         node: Node,
-        file_path,
-    ):
-        """
-        Create a Location object.
-        """
+        document: Document,
+    ) -> Location:
 
         return Location(
-            file=file_path,
+            file=document.path,
             line=node.start_point[0] + 1,
             column=node.start_point[1] + 1,
         )
@@ -96,11 +106,8 @@ class SymbolExtractor:
     def _class_symbol(
         self,
         context: ASTContext,
-        file_path,
+        document: Document,
     ):
-        """
-        Extract a class definition.
-        """
 
         node = context.node
 
@@ -110,13 +117,18 @@ class SymbolExtractor:
             return None
 
         return Symbol(
+
             name=name_node.text.decode(),
+
             kind=SymbolKind.CLASS,
-            module=Path(file_path).stem,
+
+            module=document.path.stem,
+
             location=self._location(
                 node,
-                file_path,
+                document,
             ),
+
         )
 
     # ---------------------------------------------------------
@@ -126,11 +138,8 @@ class SymbolExtractor:
     def _function_symbol(
         self,
         context: ASTContext,
-        file_path,
+        document: Document,
     ):
-        """
-        Extract a function or class method.
-        """
 
         node = context.node
 
@@ -149,28 +158,31 @@ class SymbolExtractor:
         )
 
         return Symbol(
+
             name=name_node.text.decode(),
+
             kind=kind,
+
             parent=owner,
-            module=Path(file_path).stem,
+
+            module=document.path.stem,
+
             is_async=is_async,
+
             location=self._location(
                 node,
-                file_path,
+                document,
             ),
+
         )
 
     def _classify_function(
         self,
         context: ASTContext,
-    ):
+    ) -> tuple[SymbolKind, str | None]:
         """
-        Determine whether a function is
-        a standalone function or a class method.
-
-        Returns
-        -------
-        tuple[SymbolKind, str | None]
+        Determine whether the function is a
+        standalone function or a class method.
         """
 
         for ancestor in reversed(
@@ -186,7 +198,7 @@ class SymbolExtractor:
 
             owner = (
                 class_name.text.decode()
-                if class_name is not None
+                if class_name
                 else None
             )
 
@@ -207,22 +219,8 @@ class SymbolExtractor:
     def _import_symbol(
         self,
         context: ASTContext,
-        file_path,
+        document: Document,
     ):
-        """
-        Extract a standard Python import statement.
-
-        Supported:
-
-            import requests
-            import pathlib
-
-        Future versions will support:
-
-            import requests as req
-
-            from pathlib import Path
-        """
 
         node = context.node
 
@@ -249,11 +247,11 @@ class SymbolExtractor:
 
             kind=SymbolKind.IMPORT,
 
-            module=Path(file_path).stem,
+            module=document.path.stem,
 
             location=self._location(
                 node,
-                file_path,
+                document,
             ),
 
             imported_name=None,

@@ -1,19 +1,25 @@
+"""
+Project Indexer.
+
+Builds the semantic index using cached Documents.
+"""
+
 from pathlib import Path
 
+from app.document.manager import DocumentManager
 from app.index.models import ProjectIndex
 from app.index.scanner import ProjectScanner
-from app.language.manager import LanguageManager
 from app.language.symbols import SymbolExtractor
 
 
 class ProjectIndexer:
-    """
-    Creates a project-wide symbol index.
-    """
 
     def __init__(self):
+
         self.scanner = ProjectScanner()
-        self.languages = LanguageManager()
+
+        self.documents = DocumentManager()
+
         self.extractor = SymbolExtractor()
 
     def build(self, project_root: Path):
@@ -22,16 +28,16 @@ class ProjectIndexer:
 
         for file in self.scanner.scan(project_root):
 
-            service = self.languages.registry.get_service(file.suffix)
+            document = self.documents.open(file)
 
-            if service is None:
-                continue
+            symbols = self.extractor.extract(document)
 
-            tree = service.parse(file)
+            document.symbols = symbols
 
-            symbols = self.extractor.extract(tree, file)
+            index.documents.append(document)
 
             for symbol in symbols:
+
                 index.add(symbol)
 
         return index

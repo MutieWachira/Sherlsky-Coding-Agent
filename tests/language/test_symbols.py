@@ -2,21 +2,21 @@ from pathlib import Path
 
 from app.language.parser.adapter import TreeSitterAdapter
 from app.language.symbols import SymbolExtractor
+from app.document.manager import DocumentManager
 
 
 def test_symbol_extraction():
 
-    parser = TreeSitterAdapter("python")
+    manager = DocumentManager()
 
-    tree = parser.parse(
+    document = manager.open(
         Path("examples/sample.py")
     )
 
     extractor = SymbolExtractor()
 
     symbols = extractor.extract(
-        tree,
-        Path("examples/sample.py"),
+    document
     )
 
     names = {
