@@ -4,10 +4,15 @@ from pathlib import Path
 
 
 class SymbolKind(Enum):
-    CLASS = "class"
-    FUNCTION = "function"
-    METHOD = "method"
-    IMPORT = "import"
+     MODULE = "module"
+     IMPORT = "import"
+     CLASS = "class"
+     FUNCTION = "function"
+     METHOD = "method"
+     VARIABLE = "variable"
+     PARAMETER = "parameter"
+     ATTRIBUTE = "attribute"
+     CONSTANT = "constant"
 
 
 @dataclass(slots=True)
