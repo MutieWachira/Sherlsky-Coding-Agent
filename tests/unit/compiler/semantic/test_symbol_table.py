@@ -3,10 +3,9 @@ from pathlib import Path
 from compiler.uast.language.models import (
     Symbol,
     SymbolKind,
-    SymbolTable,
     Location,
 )
-
+from compiler.semantic.symbol_table import SymbolTable
 
 def make_symbol(name: str):
 

@@ -1,37 +1,36 @@
-"""
-Semantic Analyzer.
-
-Runs the complete semantic pipeline for a document.
-
-Pipeline
-
-Tree
- ↓
-Symbol Extraction
- ↓
-Binding
- ↓
-Type Inference
- ↓
-Diagnostics
-"""
-
 from __future__ import annotations
 
-from compiler.document.document import Document
+from dataclasses import dataclass, field
 
+from compiler.document.document import Document
 from compiler.parser.extractor import SymbolExtractor
 from compiler.semantic.binder import SemanticBinder
 from compiler.semantic.inference import TypeInferenceEngine
 
-"""
-    High-level semantic pipeline.
 
-    Every opened document should pass through here.
-"""
+@dataclass(slots=True)
+class SemanticAnalysis:
+    """
+    Result of semantic analysis.
+    """
+
+    document: Document
+
+    scope: object | None = None
+
+    scopes: list = field(default_factory=list)
+
+    symbols: list = field(default_factory=list)
+
+    references: list = field(default_factory=list)
+
+    diagnostics: list = field(default_factory=list)
+
+    calls: dict = field(default_factory=dict)
 
 
 class SemanticAnalyzer:
+
     def __init__(self):
 
         self.extractor = SymbolExtractor()
@@ -40,21 +39,29 @@ class SemanticAnalyzer:
 
         self.inferencer = TypeInferenceEngine()
 
-    def analyze(self,document: Document,):
+    def analyze(
+        self,
+        document: Document,
+    ) -> SemanticAnalysis:
 
-        #
-        # STEP 1
-        #
         document.symbols = self.extractor.extract(document)
 
-        #
-        # STEP 2
-        #
-        document.scope = self.binder.bind(document)
+        scope = self.binder.bind(document)
 
-        #
-        # STEP 3
-        #
-        self.inferencer.infer(document.tree.root_node)
+        self.inferencer.infer(
+            document.tree.root_node
+        )
 
-        return document.scope
+        analysis = SemanticAnalysis(
+            document=document,
+            scope=scope,
+            scopes=[scope],
+            symbols=document.symbols,
+            references=document.references,
+            diagnostics=document.diagnostics,
+            calls={
+                "module": [],
+            },
+        )
+
+        return analysis
