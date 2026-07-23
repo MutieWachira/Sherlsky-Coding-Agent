@@ -1,7 +1,8 @@
 from pathlib import Path
 
-from app.graph.builder import GraphBuilder
 from app.index.indexer import ProjectIndexer
+from compiler.graph.builder import GraphBuilder
+from compiler.graph.relationships import RelationshipType
 
 
 def test_call_pipeline():
@@ -12,7 +13,20 @@ def test_call_pipeline():
 
     graph = GraphBuilder().build(index)
 
-    assert any(
-        edge.relation.value == "calls"
+    calls = [
+
+        edge
+
         for edge in graph.relationships()
-    )
+
+        if edge.relation == RelationshipType.CALLS
+
+    ]
+
+    assert len(calls) > 0
+
+    for edge in calls:
+
+        assert graph.get_node(edge.source) is not None
+
+        assert graph.get_node(edge.target) is not None

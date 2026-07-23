@@ -2,9 +2,7 @@ from pathlib import Path
 
 from app.index.indexer import ProjectIndexer
 
-index = ProjectIndexer().build(
-    Path("examples")
-)
+index = ProjectIndexer().build(Path("examples"))
 
 print("\nAll Symbols")
 print("=" * 50)

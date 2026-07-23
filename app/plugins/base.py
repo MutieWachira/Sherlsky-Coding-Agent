@@ -1,7 +1,9 @@
 """
 Base file for every Sherlsky plugin
 """
+
 from abc import ABC, abstractmethod
+
 
 class Plugin(ABC):
     """
@@ -18,7 +20,7 @@ class Plugin(ABC):
         Called once when the plugin loads.
         """
         raise NotImplementedError()
-    
+
     @abstractmethod
     def shutdown(self):
         """

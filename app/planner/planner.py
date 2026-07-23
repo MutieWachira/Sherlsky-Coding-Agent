@@ -9,10 +9,12 @@ Later it will use an LLM to generate plans dynamically.
 
 from app.planner.models import ExecutionPlan, Task
 
+
 class Planner:
     """
     Responsible for generating execution plans.
     """
+
     def create_plan(self, goal: str) -> ExecutionPlan:
         """
         convert a natural language goal into a sequence of executable tasks

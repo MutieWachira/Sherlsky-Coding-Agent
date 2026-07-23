@@ -1,18 +1,22 @@
-#This file is responsible for the agent to talk to Ollama
+# This file is responsible for the agent to talk to Ollama
 import requests
 
 OLLAMA_URL = "http://localhost:11434/api/generate"
 
+
 def generate(prompt: str, model: str):
     response = requests.post(
-        OLLAMA_URL, json= {
+        OLLAMA_URL,
+        json={
             "model": model,
             "prompt": prompt,
             "stream": False,
         },
-        timeout = 120,
+        timeout=120,
     )
 
     response.raise_for_status()
     return response.json()
+
+
 ["response"]

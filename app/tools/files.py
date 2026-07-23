@@ -64,18 +64,12 @@ class ReadFileTool(Tool):
         file = Path(path)
 
         if not file.exists():
-            raise FileNotFoundError(
-                f"File does not exist: {path}"
-            )
+            raise FileNotFoundError(f"File does not exist: {path}")
 
         if not file.is_file():
-            raise ValueError(
-                f"Not a file: {path}"
-            )
+            raise ValueError(f"Not a file: {path}")
 
-        content = file.read_text(
-            encoding="utf-8"
-        )
+        content = file.read_text(encoding="utf-8")
 
         # Store useful information for later tasks
         context.set("last_file", str(file))
@@ -131,14 +125,10 @@ class ListDirectoryTool(Tool):
             raise FileNotFoundError(path)
 
         if not directory.is_dir():
-            raise ValueError(
-                f"Not a directory: {path}"
-            )
+            raise ValueError(f"Not a directory: {path}")
 
         items = [
-            item.name
-            for item in directory.iterdir()
-            if item.name not in self.IGNORED
+            item.name for item in directory.iterdir() if item.name not in self.IGNORED
         ]
 
         items.sort()

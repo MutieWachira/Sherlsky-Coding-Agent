@@ -1,7 +1,7 @@
 from pathlib import Path
 
-from app.language.parser.adapter import TreeSitterAdapter
-from app.language.parser.walker import ASTWalker
+from compiler.parser.adapter import TreeSitterAdapter
+from compiler.parser.walker import ASTWalker
 
 parser = TreeSitterAdapter("python")
 

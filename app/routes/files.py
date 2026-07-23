@@ -6,10 +6,12 @@ These endpoints expose safe file-system operations
 
 from fastapi import APIRouter
 from app.tools.files import (
-    read_file, list_directory,
-    )
+    read_file,
+    list_directory,
+)
 
 router = APIRouter(prefix="/files", tags=(["Files"]))
+
 
 @router.get("/read")
 def read(path: str):
@@ -18,10 +20,9 @@ def read(path: str):
     Example:
     /files/read?path=README.md
     """
-    return {
-        "content": read_file(path)
-    }
-    
+    return {"content": read_file(path)}
+
+
 @router.get("/list")
 def list_files(path: str):
     """
@@ -30,6 +31,4 @@ def list_files(path: str):
     Example: /files/list?path=.
     """
 
-    return{
-        "files": list_directory(path)
-    }
+    return {"files": list_directory(path)}

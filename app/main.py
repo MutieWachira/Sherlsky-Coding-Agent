@@ -9,10 +9,7 @@ app.include_router(chat_router)
 app.include_router(file_router)
 app.include_router(project_router)
 
+
 @app.get("/")
 def root():
-    return {
-        "status": "running",
-        "agent": "Sherlskyy",
-        "version": "0.1"
-    }
+    return {"status": "running", "agent": "Sherlskyy", "version": "0.1"}

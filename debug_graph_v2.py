@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from app.graph.builder import GraphBuilder
+from compiler.graph.builder import GraphBuilder
 from app.index.indexer import ProjectIndexer
 
 index = ProjectIndexer().build(Path("examples"))
@@ -15,6 +15,4 @@ for edge in graph.edges.values():
     source = graph.get_node(edge.source)
     target = graph.get_node(edge.target)
 
-    print(
-        f"{source.symbol.name} --{edge.relation.value}--> {target.symbol.name}"
-    )
+    print(f"{source.symbol.name} --{edge.relation.value}--> {target.symbol.name}")

@@ -10,8 +10,8 @@ from app.tools.files import (
     ListDirectoryTool,
 )
 
-TOOLS={ 
+TOOLS = {
     "read_file": ReadFileTool(),
-    #"scan_project": ScanProjectTool(),
+    # "scan_project": ScanProjectTool(),
     "list_directory": ListDirectoryTool(),
 }

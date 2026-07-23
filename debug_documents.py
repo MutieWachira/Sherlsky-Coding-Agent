@@ -9,7 +9,6 @@ indexer.build(Path("examples"))
 print("=== Documents ===")
 
 for document in indexer.documents.documents():
-
     print()
 
     print(document.path.name)
@@ -19,5 +18,4 @@ for document in indexer.documents.documents():
     print(f"Symbols : {len(document.symbols)}")
 
     for symbol in document.symbols:
-
         print(f"  {symbol.kind.value:10} {symbol.name}")

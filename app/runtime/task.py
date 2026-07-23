@@ -1,12 +1,14 @@
 """
 Base task implementation.
 
-Every operation Sherlsky performs is 
+Every operation Sherlsky performs is
 represented as a task.
 """
+
 from abc import ABC, abstractmethod
 from enum import Enum
 from uuid import uuid4
+
 
 class TaskState(Enum):
     PENDING = "pending"
@@ -15,6 +17,7 @@ class TaskState(Enum):
     COMPLETED = "completed"
     FAILED = "failed"
     CANCELLED = "cancelled"
+
 
 class Task(ABC):
     def __init__(self):

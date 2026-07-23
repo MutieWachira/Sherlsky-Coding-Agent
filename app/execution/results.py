@@ -5,10 +5,12 @@ Execution result models
 from dataclasses import dataclass
 from enum import Enum
 
+
 class ResultStatus(Enum):
     SUCCESS = "success"
-    FAILED = "failed" 
+    FAILED = "failed"
     SKIPPED = "skipped"
+
 
 @dataclass
 class TaskResult:

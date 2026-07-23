@@ -8,6 +8,7 @@ from dataclasses import dataclass, field
 from uuid import uuid4
 from datetime import datetime
 
+
 @dataclass
 class Request:
     prompt: str

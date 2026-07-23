@@ -22,9 +22,5 @@ class ProjectScanner:
         """
 
         for file in root.rglob("*"):
-
-            if (
-                file.is_file()
-                and file.suffix in self.SUPPORTED_EXTENSIONS
-            ):
+            if file.is_file() and file.suffix in self.SUPPORTED_EXTENSIONS:
                 yield file

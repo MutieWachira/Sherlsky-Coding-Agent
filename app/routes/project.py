@@ -5,7 +5,7 @@ Allows clients to scan a projecct directory
 """
 
 from fastapi import APIRouter
-from app.scanner.scanner import ProjectScanner
+from compiler.scanner.scanner import ProjectScanner
 
 router = APIRouter(
     prefix="/project",
@@ -13,6 +13,7 @@ router = APIRouter(
 )
 
 scanner = ProjectScanner()
+
 
 @router.get("/scan")
 def scan(path: str):
@@ -31,5 +32,4 @@ def scan(path: str):
             }
             for f in project.files
         ],
-
     }

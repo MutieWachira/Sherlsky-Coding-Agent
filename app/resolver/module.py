@@ -13,13 +13,9 @@ class ModuleResolver:
         module_name: str,
     ):
 
-        candidate = (
-            project_root /
-            f"{module_name}.py"
-        )
+        candidate = project_root / f"{module_name}.py"
 
         if candidate.exists():
-
             return candidate
 
         return None

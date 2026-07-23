@@ -1,31 +1,33 @@
 from pathlib import Path
 
-from app.graph.builder import GraphBuilder
 from app.index.indexer import ProjectIndexer
+from compiler.graph.builder import GraphBuilder
 
-index = ProjectIndexer().build(
-    Path("examples")
-)
+
+index = ProjectIndexer().build(Path("examples"))
 
 graph = GraphBuilder().build(index)
 
-print()
+print("\nNODES\n")
 
-print("Call Graph")
+for node in graph.nodes.values():
 
-print("----------------")
+    print(
+        node.symbol.kind.name,
+        node.symbol.name,
+    )
+
+print("\nCALLS\n")
 
 for edge in graph.relationships():
 
     if edge.relation.value != "calls":
         continue
 
-    source = graph.get_node(edge.source)
+    src = graph.get_node(edge.source).symbol
 
-    target = graph.get_node(edge.target)
+    dst = graph.get_node(edge.target).symbol
 
     print(
-        f"{source.symbol.name}"
-        f" ---> "
-        f"{target.symbol.name}"
+        f"{src.name} -> {dst.name}"
     )

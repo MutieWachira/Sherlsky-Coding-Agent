@@ -1,17 +1,30 @@
 from pathlib import Path
 
-from app.document.manager import DocumentManager
-from app.semantic.pipeline import SemanticPipeline
+from compiler.document.manager import DocumentManager
 
 manager = DocumentManager()
+
 document = manager.open(Path("examples/sample.py"))
 
-pipeline = SemanticPipeline()
-analysis = pipeline.analyze(document)
+print()
 
-print("Semantic Analysis")
-print("-----------------")
-print(f"Symbols    : {len(analysis.symbols)}")
-print(f"Scopes     : {len(analysis.scopes)}")
-print(f"References : {len(analysis.references)}")
-print(f"Calls      : {len(analysis.calls)}")
+print("Document")
+print("----------------")
+
+print(document.path)
+
+print()
+
+print("Symbols")
+print("----------------")
+
+for symbol in document.symbols:
+    print(symbol)
+
+print()
+
+print("Diagnostics")
+print("----------------")
+
+for diagnostic in document.diagnostics:
+    print(diagnostic)

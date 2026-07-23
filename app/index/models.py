@@ -5,67 +5,88 @@ Stores every symbol discovered in a project using
 multiple indexes for fast lookup.
 
 This is the central semantic representation of an analyzed project.
-Every subsystem (graph building, planners, diagnostics, AI reasoning,
-etc.) consumes this object.
+
+Consumed by:
+- Semantic Analysis
+- Reference Resolution
+- Knowledge Graph
+- Call Graph
+- Diagnostics
+- Workspace Indexer
+- LSP Features
+- AI Reasoning
 """
+
+from __future__ import annotations
 
 from collections import defaultdict
 from pathlib import Path
 
-from app.document.document import Document
-from app.language.models import Symbol, SymbolKind
+from compiler.document.document import Document
+from compiler.uast.language.models import Symbol, SymbolKind
 
 
 class ProjectIndex:
     """
-    High-performance semantic project index.
-
-    Maintains multiple indexes so symbols can be queried
-    efficiently without scanning the entire project.
+    Global semantic index for an analyzed workspace.
     """
 
     def __init__(self):
-        """
-        Initialize all indexes.
-        """
 
         #
-        # Master symbol collection.
+        # Master symbol collection
         #
         self._symbols: list[Symbol] = []
 
         #
-        # Documents that belong to this project.
+        # Indexed documents
         #
         self.documents: list[Document] = []
 
         #
-        # Secondary indexes.
+        # Secondary indexes
         #
-
-        # login -> [Symbol]
         self.by_name: dict[str, list[Symbol]] = defaultdict(list)
 
-        # SymbolKind.CLASS -> [...]
         self.by_kind: dict[SymbolKind, list[Symbol]] = defaultdict(list)
 
-        # auth.py -> [...]
         self.by_file: dict[Path, list[Symbol]] = defaultdict(list)
 
-    @property
-    def symbols(self) -> list[Symbol]:
-        """
-        Read-only access to every indexed symbol.
-        """
+        #
+        # Fast lookup by id
+        #
+        self.by_id: dict[str, Symbol] = {}
 
-        return self._symbols
+    # ==========================================================
+    # Documents
+    # ==========================================================
 
-    def add(self, symbol: Symbol):
-        """
-        Add a symbol to every index.
-        """
+    def add_document(
+        self,
+        document: Document,
+    ) -> None:
+
+        if document not in self.documents:
+            self.documents.append(document)
+
+    # ==========================================================
+    # Symbols
+    # ==========================================================
+
+    def add(
+        self,
+        symbol: Symbol,
+    ) -> None:
+
+        #
+        # Prevent duplicate ids.
+        #
+        if symbol.id in self.by_id:
+            return
 
         self._symbols.append(symbol)
+
+        self.by_id[symbol.id] = symbol
 
         self.by_name[symbol.name].append(symbol)
 
@@ -73,84 +94,175 @@ class ProjectIndex:
 
         self.by_file[symbol.location.file].append(symbol)
 
-    def all(self) -> list[Symbol]:
-        """
-        Return every symbol.
-        """
+    def add_many(
+        self,
+        symbols: list[Symbol],
+    ) -> None:
 
-        return self._symbols
+        for symbol in symbols:
+            self.add(symbol)
 
-    def find(self, name: str) -> list[Symbol]:
+    # ==========================================================
+    # Lookup API
+    # ==========================================================
+
+    def lookup(
+        self,
+        name: str,
+    ) -> list[Symbol]:
         """
-        Find symbols by name.
+        Lookup symbols by name.
+
+        Used by:
+            ReferenceResolver
+            CallResolver
+            GraphBuilder
         """
 
         return self.by_name.get(name, [])
 
-    def classes(self) -> list[Symbol]:
+    def find(
+        self,
+        name: str,
+    ) -> list[Symbol]:
         """
-        Return all classes.
-        """
-
-        return self.by_kind.get(
-            SymbolKind.CLASS,
-            [],
-        )
-
-    def methods(self) -> list[Symbol]:
-        """
-        Return all methods.
+        Alias for lookup().
         """
 
-        return self.by_kind.get(
-            SymbolKind.METHOD,
-            [],
-        )
+        return self.lookup(name)
 
-    def functions(self) -> list[Symbol]:
+    def get(
+        self,
+        symbol_id: str,
+    ) -> Symbol | None:
         """
-        Return all standalone functions.
-        """
-
-        return self.by_kind.get(
-            SymbolKind.FUNCTION,
-            [],
-        )
-
-    def imports(self) -> list[Symbol]:
-        """
-        Return all imports.
+        Lookup by symbol id.
         """
 
-        return self.by_kind.get(
-            SymbolKind.IMPORT,
-            [],
-        )
+        return self.by_id.get(symbol_id)
 
-    def file(self, path: Path) -> list[Symbol]:
-        """
-        Return every symbol defined inside a file.
-        """
+    # ==========================================================
+    # Query Helpers
+    # ==========================================================
+
+    @property
+    def symbols(self) -> list[Symbol]:
+        return self._symbols
+
+    def all(self) -> list[Symbol]:
+        return self._symbols
+
+    def classes(self):
+
+        return self.by_kind.get(SymbolKind.CLASS, [])
+
+    def methods(self):
+
+        return self.by_kind.get(SymbolKind.METHOD, [])
+
+    def functions(self):
+
+        return self.by_kind.get(SymbolKind.FUNCTION, [])
+
+    def imports(self):
+
+        return self.by_kind.get(SymbolKind.IMPORT, [])
+
+    def variables(self):
+
+        return self.by_kind.get(SymbolKind.VARIABLE, [])
+
+    def parameters(self):
+
+        return self.by_kind.get(SymbolKind.PARAMETER, [])
+
+    def constants(self):
+
+        return self.by_kind.get(SymbolKind.CONSTANT, [])
+
+    def attributes(self):
+
+        return self.by_kind.get(SymbolKind.ATTRIBUTE, [])
+
+    def file(
+        self,
+        path: Path,
+    ) -> list[Symbol]:
 
         return self.by_file.get(path, [])
 
-    def __len__(self) -> int:
+    # ==========================================================
+    # Advanced Queries
+    # ==========================================================
+
+    def children_of(
+        self,
+        parent: str,
+    ) -> list[Symbol]:
         """
-        Number of indexed symbols.
+        Return every symbol owned by a parent.
+
+        Example:
+            class -> methods
+            function -> parameters
         """
+
+        return [
+            symbol
+            for symbol in self._symbols
+            if symbol.parent == parent
+        ]
+
+    def exists(
+        self,
+        name: str,
+    ) -> bool:
+
+        return name in self.by_name
+
+    def document(
+        self,
+        path: Path,
+    ) -> Document | None:
+
+        for document in self.documents:
+
+            if document.path == path:
+                return document
+
+        return None
+
+    # ==========================================================
+    # Utilities
+    # ==========================================================
+
+    def clear(self):
+
+        self._symbols.clear()
+
+        self.documents.clear()
+
+        self.by_name.clear()
+
+        self.by_kind.clear()
+
+        self.by_file.clear()
+
+        self.by_id.clear()
+
+    # ==========================================================
+
+    def __len__(self):
 
         return len(self._symbols)
 
     def __iter__(self):
-        """
-        Iterate over every symbol.
-        """
 
         return iter(self._symbols)
 
-    def __contains__(self, symbol: Symbol) -> bool:
-        """
-        Membership test.
-        """
+    def __contains__(
+        self,
+        symbol: Symbol,
+    ):
 
-        return symbol in self._symbols
+        return symbol.id in self.by_id

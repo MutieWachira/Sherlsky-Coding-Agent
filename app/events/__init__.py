@@ -11,7 +11,4 @@ bus.subscribe(
     log_event,
 )
 
-bus.subscribe(
-    "ToolCompleted",
-    memory.handle
-)
+bus.subscribe("ToolCompleted", memory.handle)

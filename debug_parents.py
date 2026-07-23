@@ -1,7 +1,7 @@
 from pathlib import Path
 
-from app.language.parser.adapter import TreeSitterAdapter
-from app.language.parser.walker import ASTWalker
+from compiler.parser.adapter import TreeSitterAdapter
+from compiler.parser.walker import ASTWalker
 
 parser = TreeSitterAdapter("python")
 
@@ -12,9 +12,7 @@ walker = ASTWalker()
 parent_map = walker.build_parent_map(tree.root_node)
 
 for node in walker.walk(tree.root_node):
-
     if node.type == "function_definition":
-
         name = node.child_by_field_name("name")
 
         print(f"\nFunction: {name.text.decode()}")
@@ -24,11 +22,9 @@ for node in walker.walk(tree.root_node):
         while current:
             print(" ->", current.type)
             current = parent_map.get(id(current))
-    
+
     for node in walker.walk(tree.root_node):
-
         if node.type == "function_definition":
-
             print(node)
             print(id(node))
 

@@ -10,6 +10,7 @@ Every interaction goes through this class.
 
 from app.services.ollama import generate
 
+
 class Agent:
     """
     Main AI Agent
@@ -18,15 +19,14 @@ class Agent:
     def __init__(self, model: str):
         self.model = model
 
-    
     def ask(self, prompt: str) -> str:
         """
         Send a prompt to the LLM
-        
+
         parameters
         --------------
         prompt : str
-        
+
         Returns
         ---------------
         str"""
